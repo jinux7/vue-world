@@ -1,0 +1,21 @@
+{
+  "name": "vue-world",
+  "version": "1.0.0",
+  "description": "仿vue以及周边插件",
+  "main": "index.js",
+  "scripts": {
+    "dev": "parcel ./src/index.html",
+    "build": "parcel build ./src/index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jinux7/vue-world.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jinux7/vue-world/issues"
+  },
+  "homepage": "https://github.com/jinux7/vue-world#readme"
+}
