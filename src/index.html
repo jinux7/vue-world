@@ -5,18 +5,30 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>vue</title>
+    <link rel="stylesheet" href="./style.less">
 </head>
 <body>
-  <div id="app">
-    <div class="div1" v-html="name"></div>
-    <div class="div2">{{likes.food}}</div>
-    <div class="div2">
-      <strong>
+  <div class="wrap">
+    <div class="left">
+      <div id="app1">
+        <div class="div1" v-html="name"></div>
+        <div class="div2" v-text="likes.food"></div>
+        <input type="text" v-model="name">
+        <div class="div2">
+          <strong>
+            {{name}}
+          </strong>
+          <span>
+            {{sum}}
+          </span>
+        </div>
+        <button @click="onChange">点击修改值</button>
+      </div>
+    </div>
+    <div class="right">
+      <div id="app2">
         {{name}}
-      </strong>
-      <span>
-        {{age}}
-      </span>
+      </div>
     </div>
   </div>
 </body>

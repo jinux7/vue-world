@@ -1,7 +1,6 @@
 import Vue from '../libs/vue';
 
-let vm = new Vue({
-  el: document.getElementById('app'),
+let option = {
   data() {
     return {
       name: '小明',
@@ -13,7 +12,18 @@ let vm = new Vue({
       arr: [1, 2, 3]
     }
   },
-});
-window.vm = vm;
-// vm.$data.arr[1] = 'ooo';
-// console.log(vm.$data.name);
+  methods: {
+    onChange() {
+      this.age = 30;
+    }
+  },
+  computed: {
+    sum() {
+      return this.age + 20;
+    }
+  }
+}
+let vm1 = new Vue(option);
+let vm2 = new Vue(option);
+vm1.$mount(document.getElementById('app1'));
+vm2.$mount(document.getElementById('app2'));

@@ -9,7 +9,6 @@ class Dep {
   // 发布的方法
   notify() {
     this.subs.forEach(sub=> {
-      console.log(this.subs);
       sub.update();
     });
   }

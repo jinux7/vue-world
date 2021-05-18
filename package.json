@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/jinux7/vue-world/issues"
   },
-  "homepage": "https://github.com/jinux7/vue-world#readme"
+  "homepage": "https://github.com/jinux7/vue-world#readme",
+  "devDependencies": {
+    "less": "^4.1.1"
+  }
 }

@@ -4,21 +4,23 @@ class Vue {
   constructor(option) {
     this.$el = option.el;
     this.$data = this._data = option.data();
-
-    this.init();
+    this.$methods = option.methods;
+    this.$computed = option.computed;
+    this.__init();
   }
-  init() {
-    this.observe(this.$data);
-    this.compile(this.$el);
+  __init() {
+    this.__computed();
+    this.__observe(this.$data);
+    this.__proxyData();
   }
   // 对data属性进行get和set监控
-  observe(data) {
+  __observe(data) {
     if(typeof data !== 'object') {
       return void 0;
     }
     for(let k in data) {
       if(typeof data[k] === 'object') { // 如果data[k]还是对象的话，进行递归操作
-        this.observe(data[k]);
+        this.__observe(data[k]);
       }else {
         let dep = new Dep();
         let val = data[k];
@@ -38,47 +40,163 @@ class Vue {
     }
   }
   // 对html进行解析操作，处理{{}}, v-xxx等标记
-  compile(el) {
+  __compile(el) {
     let vm = this;
     let childNodes = Array.from(el.childNodes);
     let exp = /\{\{(.+)\}\}/g;
     childNodes.forEach(ele=> {
       // 文本节点内容里含有{{}}
       if(ele.nodeType===3&&exp.test(ele.textContent)) {
-        // 这里需要new一个watcher，并放置在Dep类的target上
-        let expNameArr = RegExp.$1.split('.');
-        let val = vm.$data;
-        let watcher = new Watcher(()=> {
-          let val = vm.$data;
-          for(let k in expNameArr) {
-            val = val[expNameArr[k]];
-          }
-          ele.textContent = val;
-        })
-        Dep.target = watcher;
-        for(let k in expNameArr) {
-          val = val[expNameArr[k]];
-        }
-        Dep.target = null;
-        ele.textContent = ele.textContent.replace(/\{\{.+\}\}/g, val);
+        this.__parseTpl(vm, ele);
       }
-      // 对v-xxx属性做处理
+      // 指令处理
       if(ele.nodeType===1) {
         let attributes = Array.from(ele.attributes);
         attributes.forEach(attr=> {
+          // 对v-xxx属性做处理
           if(attr.name.indexOf('v-')===0) {
             let director = attr.name.slice(2);
-            let epx = attr.value;
-            
-            console.log(director);
+            switch(director) {
+              case 'html':
+                this.__directorHtml(vm, ele, attr);
+                break;
+              case 'text':
+                this.__directorText(vm, ele, attr);
+                break;
+              case 'model':
+                this.__directorModel(vm, ele, attr);
+                break;
+            }
           }
-        });      
+          // 对@属性做处理
+          if(attr.name.indexOf('@')===0) {
+            let eventName = attr.name.slice(1);
+            ele.addEventListener(eventName, vm.$methods[attr.value].bind(vm), false);
+          }
+        }); 
       }
-      
+      // 如果ele含有子元素，则递归循环
       if(ele.nodeType===1&&ele.childNodes.length>0) {
-        this.compile(ele);
+        this.__compile(ele);
       }
     });
+  }
+
+  // {{}}标记符的操作
+  __parseTpl(vm, ele) {
+    // 这里需要new一个watcher，并放置在Dep类的target上
+    let expNameArr = RegExp.$1.split('.');
+    let val = vm.$data;
+    let watcher = new Watcher(()=> {
+      let val = vm.$data;
+      for(let k in expNameArr) {
+        val = val[expNameArr[k]];
+      }
+      ele.textContent = val;
+    })
+    Dep.target = watcher;
+    for(let k in expNameArr) {
+      val = val[expNameArr[k]];
+    }
+    Dep.target = null;
+    ele.textContent = ele.textContent.replace(/\{\{.+\}\}/g, val);
+  }
+  // v-html指令操作
+  __directorHtml(vm, ele, attr) {
+    let epx = attr.value;
+    let expNameArr = epx.split('.');
+    let val = vm.$data;
+    // 加依赖
+    let watcher = new Watcher(()=> {
+      let val = vm.$data;
+      for(let k in expNameArr) {
+        val = val[expNameArr[k]];
+      }
+      ele.innerHTML = val = val;
+    })
+    Dep.target = watcher;
+    for(let k in expNameArr) {
+      val = val[expNameArr[k]];
+    }
+    Dep.target = false;
+    ele.innerHTML = val;
+  }
+  // v-text指令操作
+  __directorText(vm, ele, attr) {
+    let epx = attr.value;
+    let expNameArr = epx.split('.');
+    let val = vm.$data;
+    // 加依赖
+    let watcher = new Watcher(()=> {
+      let val = vm.$data;
+      for(let k in expNameArr) {
+        val = val[expNameArr[k]];
+      }
+      ele.textContent = val;
+    })
+    Dep.target = watcher;
+    for(let k in expNameArr) {
+      val = val[expNameArr[k]];
+    }
+    Dep.target = false;
+    ele.textContent = val;
+  }
+  // v-model指令操作
+  __directorModel(vm, ele, attr) {
+    let epx = attr.value;
+    let expNameArr = epx.split('.');
+    let val = vm.$data;
+    // 加依赖
+    let watcher = new Watcher(()=> {
+      let val = vm.$data;
+      for(let k in expNameArr) {
+        val = val[expNameArr[k]];
+      }
+      ele.value = val;
+    })
+    Dep.target = watcher;
+    for(let k in expNameArr) {
+      val = val[expNameArr[k]];
+    }
+    Dep.target = false;
+    ele.value = val;
+    // 双向数据绑定，这里需要给ele添加input事件来改变data数据
+    ele.addEventListener('input', evt=> {
+      vm.$data[epx] = evt.target.value;
+    }, false);
+  }
+  // 将$data的数据合并到vm上，也就是在vm上做一个proxy，可以直接访问$data里的数据
+  __proxyData() {
+    let data = this.$data;
+    let vm = this;
+    proxyFn(data);
+    function proxyFn(data) {
+      for(let k in data) {
+        Object.defineProperty(vm, k, {
+          get() {
+            return data[k];
+          },
+          set(newVal) {
+            data[k] = newVal;
+          }
+        });
+      }
+    }
+  }
+  // 处理computed计算属性
+  __computed() {
+    let computed = this.$computed;
+    for(let k in computed) {
+      Object.defineProperty(this.$data, k, {
+        get() {
+          return computed[k].call(this);
+        }
+      });
+    }
+  }
+  // 挂在并渲染$mount
+  $mount(el) {
+    this.__compile(el);
   }
 }
 
