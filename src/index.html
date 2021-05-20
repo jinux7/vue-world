@@ -8,29 +8,7 @@
     <link rel="stylesheet" href="./style.less">
 </head>
 <body>
-  <div class="wrap">
-    <div class="left">
-      <div id="app1">
-        <div class="div1" v-html="name"></div>
-        <div class="div2" v-text="likes.food"></div>
-        <input type="text" v-model="name">
-        <div class="div2">
-          <strong>
-            {{name}}
-          </strong>
-          <span>
-            {{sum}}
-          </span>
-        </div>
-        <button @click="onChange">点击修改值</button>
-      </div>
-    </div>
-    <div class="right">
-      <div id="app2">
-        {{name}}
-      </div>
-    </div>
-  </div>
+  <div id="app"></div>
 </body>
 <script src="./main.js"></script>
 </html>

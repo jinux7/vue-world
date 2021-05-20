@@ -1,17 +1,23 @@
 import Dep from './dep';
 import Watcher from './watcher';
+const loop = function() {}
 class Vue {
   constructor(option) {
-    this.$el = option.el;
+    this.$template = option.template;
     this.$data = this._data = option.data();
     this.$methods = option.methods;
     this.$computed = option.computed;
+    this.$created = option.created || loop;
+    this.$mounted = option.mounted || loop;
+    this.$destroyed = option.destroyed || loop;
+    this._router = option.router;
     this.__init();
   }
   __init() {
     this.__computed();
     this.__observe(this.$data);
     this.__proxyData();
+    this.$created();
   }
   // 对data属性进行get和set监控
   __observe(data) {
@@ -80,6 +86,7 @@ class Vue {
         this.__compile(ele);
       }
     });
+    return el;
   }
 
   // {{}}标记符的操作
@@ -196,8 +203,33 @@ class Vue {
   }
   // 挂在并渲染$mount
   $mount(el) {
-    this.__compile(el);
+    this.$el = el;
+    let fragDocument = document.createDocumentFragment();
+    let tempDiv = document.createElement('div');
+    tempDiv.innerHTML = this.$template;
+    let childNodes = tempDiv.childNodes;
+    childNodes.forEach(child=> {
+      fragDocument.appendChild(child);
+    });
+    let compileNode = this.__compile(fragDocument);
+    el.appendChild(compileNode);
+    this.$mounted(); // 执行mounted钩子函数
+    // 挂在之后，执行router
+    if(this._router) {
+      this.$router.init.bind(this)();
+    }
   }
+  // 销毁操作，也就是从挂在节点上移除
+  $destroy() {
+    this.$el.childNodes.forEach(child=> {
+      this.$el.removeChild(child);
+    });
+    this.$destroyed();
+  }
+}
+// $use第三方库插入方法
+Vue.$use = (lib)=> {
+  lib&&lib.install&&lib.install(Vue);
 }
 
 export default Vue;

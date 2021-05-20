@@ -1,9 +1,32 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+html, body {
+  height: 100%;
+}
 .wrap {
-  display: flex;
-  > div {
-    flex: 1;
-    border: 1px solid #cccccc;
-    margin: 5px;
-    padding: 10px;
+  .title {
+    text-align: center;
+    line-height: 60px;
+    background-color: #000000;
+    color: #ffffff;
   }
+  .content {
+    display: flex;
+    .left {
+      width: 200px;
+      background-color: #b0e7ee;
+      height: calc(100vh - 60px);
+    }
+    .right {
+      flex: 1;
+    }
+  }
+  // > div {
+  //   flex: 1;
+  //   border: 1px solid #cccccc;
+  //   margin: 5px;
+  //   padding: 10px;
+  // }
 }
